@@ -1,0 +1,14 @@
+[Event "Test: Chapter 1"]
+[Site "https://lichess.org/study/yeN8h1Wc/x129JJRW"]
+[Result "*"]
+[UTCDate "2022.12.25"]
+[UTCTime "11:46:31"]
+[Variant "Standard"]
+[ECO "C20"]
+[Opening "Bongcloud Attack"]
+[Annotator "https://lichess.org/@/Olle_Eriksson"]
+
+1. e4 { This is e4 from
+chapter 1 } { [%cal Ge1e3] } (1. f4 f5 2. Nf3 Nf6)  (1. c4 c5) 1... e5 { Now go King forward one step } { [%cal Ge1e3] } 2. Ke2 (2. Nc3 { Expecting Nc6 } { [%cal Gb8c6] } 2... Nc6) 2... Ke7 { [%cal Ge7f6,Gf6g5,Gg5g4,Gg4g3] } *
+
+

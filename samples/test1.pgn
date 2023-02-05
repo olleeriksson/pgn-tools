@@ -1,0 +1,9 @@
+[Event "1 hej hopp"]
+[Site "Some place"]
+[Date "????.??.??"]
+[Round "?"]
+[White "?"]
+[Annotator "https://lichess.org/@/Olle_Eriksson"]
+[Result "*"]
+
+1.e4 e5 { This is the first comment } {[%cal Gf2f5][%csl Gb3]}

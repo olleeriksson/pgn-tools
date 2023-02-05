@@ -1,0 +1,14 @@
+[Event "Test: Subtree test"]
+[Site "https://lichess.org/study/Mu9pclvU/D9htlVWz"]
+[Result "*"]
+[UTCDate "2023.02.05"]
+[UTCTime "19:04:28"]
+[Variant "Standard"]
+[ECO "C44"]
+[Opening "King's Knight Opening: Normal Variation"]
+[Annotator "https://lichess.org/@/Olle_Eriksson"]
+
+{ An }
+1. e4 { A comment } 1... e5 { Another comment } 2. Nf3 (2. Nc3 { [%cal Gg8f6,Gb8c6] } 2... Nf6 { A Nf6 comment } (2... Nc6 3. f4)) 2... Nc6 *
+
+

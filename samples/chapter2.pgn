@@ -1,0 +1,13 @@
+[Event "Test: Chapter 2"]
+[Site "https://lichess.org/study/yeN8h1Wc/R7MCq71I"]
+[Result "*"]
+[UTCDate "2022.12.25"]
+[UTCTime "14:09:44"]
+[Variant "Standard"]
+[ECO "C26"]
+[Opening "Vienna Game: Falkbeer Variation"]
+[Annotator "https://lichess.org/@/Olle_Eriksson"]
+
+1. e4 $10 { This is e4 from chapter 2 } { [%cal Rb1b3] } 1... e5 { Now go Nc3 } { [%cal Gf2f4,Gd2d4] } 2. Nc3!! { Expecting Nf6 } { [%cal Gg8f6] } 2... Nf6 { Responding with Nf6 } *
+
+

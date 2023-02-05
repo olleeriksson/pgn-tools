@@ -1,0 +1,13 @@
+[Event "Test: Tennison"]
+[Site "https://lichess.org/study/Mu9pclvU/4bHtQYo6"]
+[Result "*"]
+[UTCDate "2023.02.05"]
+[UTCTime "20:22:13"]
+[Variant "Standard"]
+[ECO "A06"]
+[Opening "Zukertort Opening: Tennison Gambit"]
+[Annotator "https://lichess.org/@/Olle_Eriksson"]
+
+1. e4 (1. Nf3 d5 2. e4 { Transposition: "Tennison Gambit", 1.e4 d5 2.Nf3 }) 1... d5 2. Nf3 { Tennison Gambit } 2... dxe4 3. Ng5 Nf6
+
+

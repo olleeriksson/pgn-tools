@@ -1,0 +1,8 @@
+[Event "2 well well"]
+[Site "Some place"]
+[White "?"]
+[Black "?"]
+[Annotator "https://lichess.org/@/Olle_Eriksson"]
+[Result "*"]
+
+1.e4 e5 { This is the second comment } {[%cal Bf2f5,Gg2g3][%csl Yc4,Rb3]}

@@ -1,0 +1,13 @@
+[Event "Test transpositions main: Main"]
+[Site "https://lichess.org/study/EBs9W2ZG/if2NKzXQ"]
+[Result "*"]
+[Annotator "https://lichess.org/@/Olle_Eriksson"]
+[UTCDate "2023.02.05"]
+[UTCTime "19:34:17"]
+[Variant "Standard"]
+[ECO "B01"]
+[Opening "Scandinavian Defense: Mieses-Kotroc Variation"]
+
+1. e4 (1. Nf3 d5 2. e4 { Transposition: "Tennison Gambit", 1.e4 d5 2.Nf3, tennison.pgn }) 1... d5 2. exd5 (2. Nf3 { Transposition: "Tennison Gambit", 1.e4 d5 2.Nf3, tennison.pgn }) 2... Qxd5 *
+
+

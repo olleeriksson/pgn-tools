@@ -1,0 +1,14 @@
+[Event "Overview of variations"]
+[Date "????.??.??"]
+[Result "*"]
+[UTCDate "2022.12.03"]
+[UTCTime "17:16:33"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[FEN "r1bqkb1r/pppp1ppp/2n2n2/4p3/2BPP3/5N2/PPP2PPP/RNBQK2R b KQkq - 0 4"]
+[SetUp "1"]
+
+4... exd4 { A comment [%cal d2d4] }(4... Nxe4 5. dxe5 Bc5 (5... d5 6. Qxd5)  (5... Nc5 6. Qe2)  (5... d6 6. Bxf7+)  (5... Qe7 6. Qe2) 6. Qd5)  (4... d6 5. d5)  (4... Nxd4 5. Bxf7+)  (4... d5 5. exd5) 5. e5 d5 (5... Ng4 6. O-O Ngxe5 (6... Bc5 7. Bf4 O-O (7... d6 8. exd6)  (7... d5 8. exd6)  (7... Qe7 8. h3)  (7... h5 8. c3) 8. h3)  (6... Be7 7. Re1)  (6... d6 7. exd6)  (6... d5 7. Bb5) 7. Nxe5)  (5... Ne4 6. Qe2)  (5... Qe7 6. O-O Ng4 (6... Nxe5 7. Nxe5)  (6... Ng8 7. Re1)  (6... Ne4 7. Re1)  (6... d5 7. exf6) 7. Re1)  (5... Ng8 6. O-O) 6. Bb5 Ne4 (6... Nd7 7. O-O)  (6... Ng4 7. O-O)  (6... Bb4+ 7. c3)  (6... Qe7 7. O-O) 7. Nxd4 Bd7 (7... Bc5 8. Nxc6)  (7... Qh4 8. O-O)  (7... a6 8. Bxc6+)  (7... Bb4+ 8. c3) 8. Bxc6 bxc6 (8... Bxc6 9. Nxc6)  (8... b6 9. Bxd5)  (8... Bc5 9. Bxd7+ Qxd7 10. f3)  (8... Bb4+ 9. c3 bxc6 10. cxb4)  (8... Nxf2 9. Bxd7+) 9. O-O Bc5 (9... Be7 10. f3)  (9... c5 10. Nb3)  (9... Nc5 10. f4)  (9... Qh4 10. Be3)  (9... Rb8 10. f3) 10. f3 Ng5 (10... Bxd4+ 11. Qxd4)  (10... Qh4 11. fxe4)  (10... O-O 11. fxe4)  (10... f6 11. e6 Bxe6 (11... Bxd4+ 12. Qxd4 c5 13. exd7+) 12. fxe4 dxe4 13. Qh5+) 11. f4 *
+
+
