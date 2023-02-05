@@ -1,6 +1,3 @@
-# Description: A simple tool to merge several pgn games into a single game with
-# variations.
-
 import chess.pgn
 import sys
 import re
@@ -42,7 +39,7 @@ def get_path(node):
 
 # Convert  "1.d4 Nf6 2.c4 e6"  to  "d4 Nf6 c4 e6"
 def strip_leading_move_number(move):
-    res = re.findall('^\s*\d*\.?(.*)', move)
+    res = re.findall('^\s*\d*\.{0,3}\s*(\S*)\s*', move)
     if res and res[0]:
         return res[0]
     else:
