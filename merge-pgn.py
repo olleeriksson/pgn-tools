@@ -126,16 +126,21 @@ def insert_braces(text):
     return text
 
 def main():
+    usage = f"Usage: {sys.argv[0]} <PGN FILES>... <OUTPUT FILE>\nWhere OUTPUT_FILE can be - to indicate STDOUT."
+
+    if len(sys.argv) <= 2:
+        raise SystemExit(usage)
     try:
-        args = sys.argv[1:]
+        infiles = sys.argv[1:-1]
+        outfile = sys.argv[-1]
     except IndexError:
-        raise SystemExit(f"Usage: {sys.argv[0]} <string_to_reverse>")
+        raise SystemExit(usage)
 
     master_node = chess.pgn.Game()
 
     games = []
-    for name in args:
-        pgn = open(name, encoding="utf-8-sig")
+    for name in infiles:
+        pgn = open(name, encoding="utf-8")
         game = chess.pgn.read_game(pgn)
         while game is not None:
             text, annotations = merge_comments(master_node.comment, game.comment)
@@ -200,6 +205,11 @@ def main():
     # ie 1.e4 { A comment } { [%cal Ge2e4] }    instead of    1.e4 { A comment [%cal Ge2e4] }
     pgn = insert_braces(pgn)
     
-    print(pgn)
+    if outfile == "-":
+        print(pgn)
+    else:
+        f = open(outfile, "w", encoding="utf-8")
+        f.write(pgn)
+        f.close()
 
 main()

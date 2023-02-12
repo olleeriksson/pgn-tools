@@ -62,7 +62,7 @@ else:
     if dir == "":
         dir = os.path.dirname(os.path.realpath(input_file)) + os.path.sep
 
-    f = open(input_file, encoding="utf-8-sig")
+    f = open(input_file, encoding="utf-8")
     pgn = f.read()
     
 
@@ -114,7 +114,7 @@ log_info(f"  Number of remaining \"{look_for}\" occcurrancies: {pgn.count(look_f
 if output_file == "-":
     print(pgn)
 else:
-    f = open(output_file, "w")
+    f = open(output_file, "w", encoding="utf-8")
     f.write(pgn)
     f.close()    
    

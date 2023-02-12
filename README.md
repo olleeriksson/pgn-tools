@@ -21,15 +21,24 @@ pip install python-chess
 
 Merge multiple PGN games into one with variations, from the same or multiple files. All games from all PGN files you pass to the script will be merged into one. Original version was based on [merge-pgn](https://github.com/permutationlock/merge-pgn) 
 
+Usage
+```
+python merge-pgn.py  <PGN FILE 1> <PGN FILE 1>..  <OUTPUT FILE or - for STDOUT>
+```
 
 Example:
 ```
-python merge-pgn.py game1.pgn game2.pgn games3.pgn > all_games.pgn
+python merge-pgn.py  game1.pgn game2.pgn games3.pgn  -     (prints to STDOUT)
+```
+
+Example:
+```
+python merge-pgn.py  game1.pgn game2.pgn games3.pgn  all_games_merged.pgn
 ```
 
 Or, one PGN with multiple games:
 ```
-python merge-pgn.py "games.pgn" > "all_games_merged.pgn"
+python merge-pgn.py  games.pgn  all_games_merged.pgn
 ```
 
 ## Comments
@@ -178,6 +187,10 @@ Ie, the whole subtree starting at 1.e4 e5 2.Nc3 will be returned including all c
 
 
 # Changelog
+
+### 2023-02-12
+
+- Added ability to save output to file with the last script argument or - for STDOUT.
 
 ### 2023-02-05
 
