@@ -78,6 +78,7 @@ regex = re.compile(r'\{\s*Transposition:\s*\"(.*?)\",(.*?)(,(.*?))?\}', re.DOTAL
 
 match = regex.search(pgn)
 num_matches = 0
+num_errors = 0
 while (match):
     info = match.group(1).strip()
     moves = match.group(2).strip()
@@ -86,35 +87,46 @@ while (match):
     else:
         transposition_file = input_file
 
-    log_info(f"  Transposition:  [{info}]\n    Target moves: [{moves}]\n    Target file:  {format_path(transposition_file)}")
-
-    subtree = pgn_subtree(transposition_file, moves)
+    replacement = pgn_subtree(transposition_file, moves)
 
     first_non_space = pgn[match.end():].strip()[0]
     if first_non_space not in [")", "(", "*"]:
-        print(f"  ERROR: The move at transposition [{info}] with moves [{moves}] in {input_file} is not empty. \"{first_non_space}\"")
-        exit()
+        error_msg = f"  ERROR {num_errors + 1}: The move at transposition [{info}] with moves [{moves}] in {input_file} is not empty. \"{first_non_space}\""
+        print(error_msg)
+        replacement = "{ " + error_msg + " }"
+        num_errors += 1
+        #exit()
 
-    if not subtree:
-        print(f"  ERROR: Unable to find a move [{info}] with moves [{moves}] anywhere in transposition file {transposition_file}.")
-        exit()
+    elif not replacement:
+        error_msg = f"  ERROR {num_errors + 1}: Unable to find a move [{info}] with moves [{moves}] anywhere in transposition file {transposition_file}."
+        print(error_msg)
+        replacement = "{ " + error_msg + " }"
+        num_errors += 1
+        #exit()
 
-    #print("Found: " + str(match.start()) + " to " + str(match.end()) + "   group: [" + match.group(1) + "]")
-    pgn = pgn[:match.start()] + subtree + pgn[match.end():]
+    else:
+        log_info(f"  Transposition:  [{info}]\n    Target moves: [{moves}]\n    Target file:  {format_path(transposition_file)}")
+
+    pgn = pgn[:match.start()] + replacement + pgn[match.end():]
 
     match = regex.search(pgn)
     num_matches += 1
 
-log_info(f"  Number of transpositions: {num_matches}")
 
-# Look for any remaining placeholders and report them as a way to catch any missed ones.
 look_for = "Transposition:"
-log_info(f"  Number of remaining \"{look_for}\" occcurrancies: {pgn.count(look_for)}")
 
-if output_file == "-":
+log_info(f"  ----------------------------------")
+log_info(f"  Number of transpositions: {num_matches}")
+log_info(f"  ----------------------------------")
+log_info(f"  Number of errors: {num_errors}")
+log_info(f"  ----------------------------------")
+log_info(f"  Number of remaining \"{look_for}\" occcurrancies: {pgn.count(look_for)}")
+log_info(f"  ----------------------------------")
+
+if output_file == "-" and num_errors == 0:
     print(pgn)
 else:
     f = open(output_file, "w", encoding="utf-8")
     f.write(pgn)
     f.close()    
-   
+
