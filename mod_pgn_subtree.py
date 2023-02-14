@@ -63,7 +63,7 @@ def pgn_subtree(filename, moves_str):
     master_node = chess.pgn.Game()
 
     games = []
-    pgn = open(filename, encoding="utf-8-sig")
+    pgn = open(filename, encoding="utf-8")
     game = chess.pgn.read_game(pgn)
 
     mlist = []

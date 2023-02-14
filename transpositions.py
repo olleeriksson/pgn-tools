@@ -91,12 +91,12 @@ while (match):
     subtree = pgn_subtree(transposition_file, moves)
 
     first_non_space = pgn[match.end():].strip()[0]
-    if first_non_space != ")" and first_non_space != "(":
-        print(f"  ERROR: The move at transposition [{info}] with moves [{moves}] in {transposition_file} is not empty.")
+    if first_non_space not in [")", "(", "*"]:
+        print(f"  ERROR: The move at transposition [{info}] with moves [{moves}] in {input_file} is not empty. \"{first_non_space}\"")
         exit()
 
     if not subtree:
-        print(f"  ERROR: Unable to find a move [{info}] with moves [{moves}] in {transposition_file}.")
+        print(f"  ERROR: Unable to find a move [{info}] with moves [{moves}] anywhere in transposition file {transposition_file}.")
         exit()
 
     #print("Found: " + str(match.start()) + " to " + str(match.end()) + "   group: [" + match.group(1) + "]")

@@ -54,6 +54,12 @@ def merge_text_strings(text1, text2):
     if two_in_one:
         return text1
     if text1 and text2:
+        transposition = "Transposition: "
+        if transposition in text1 or transposition in text2:
+            print(f"Found \"{transposition}\" in one of these two comments about to be merged:")
+            print(f"Text1: \"{text1}\"")
+            print(f"Text2: \"{text2}\"")
+            sys.exit()
         return text1 + "\n\n" + text2
     if text1:
         return text1
