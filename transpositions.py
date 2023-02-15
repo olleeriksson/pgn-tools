@@ -48,27 +48,46 @@ def log_info(text):
 try:
     input_file = sys.argv[1]
     output_file = sys.argv[2]
-    if len(sys.argv) == 4:
-        dir = sys.argv[3]
+    if len(sys.argv) >= 4:
+        locations = sys.argv[3:]
     else:
-        dir = ""
+        locations = ""
 except IndexError:
-    raise SystemExit(f"Usage: {sys.argv[0]} <INPUT_FILE> <OUTPUT_FILE> [<TRANSPOSITION_DIRECTORY>]")
+    raise SystemExit(f"Usage: {sys.argv[0]} <INPUT_FILE> <OUTPUT_FILE> [<TRANSPOSITION_DIRECTORY_OR_FILE>...]")
 
 if input_file == "-":
     pgn = "".join(sys.stdin.read())
 else:
-    # If the transposition dir has not been given, use the path of the input file
-    if dir == "":
-        dir = os.path.dirname(os.path.realpath(input_file)) + os.path.sep
-
     f = open(input_file, encoding="utf-8")
     pgn = f.read()
-    
 
+
+transposition_files = []
+transposition_dirs = []
+for location in locations:
+    if os.path.isfile(location):
+        transposition_files.append(location)
+    elif os.path.isdir(location):
+        transposition_dirs.append(location)
+    else:
+        log_info(f"Error. \"{location}\" doesn't exist.")
+        exit()
+
+# Add the input file as a transposition file and the directory of the input file as a transposition directory
+input_file_dir = os.path.dirname(os.path.realpath(input_file)) + os.path.sep
+transposition_dirs.append(input_file_dir)
+transposition_files.append(input_file)
+
+
+# Print all transposition files and dirs
 log_info(f"  Input file: \"{format_path(input_file)}\"")
 log_info(f"  Output file: \"{format_path(output_file)}\"")
-log_info(f"  Transposition dir: \"{format_path(dir)}\"")
+log_info(f"  Global transposition files and dirs:")
+for file in transposition_files:
+    log_info(f"    \"{format_path(file)}\"")
+for dir in transposition_dirs:
+    log_info(f"    \"{format_path(dir)}\"")
+
 
 # Looking for a comment like so:
 #   Transposition: "Some text", bla bla moves bla bla[, filename.pgn]                       # filename is optional
@@ -82,30 +101,46 @@ num_errors = 0
 while (match):
     info = match.group(1).strip()
     moves = match.group(2).strip()
-    if match.group(4):
-        transposition_file = dir + os.path.sep + match.group(4).strip()
-    else:
-        transposition_file = input_file
-
-    replacement = pgn_subtree(transposition_file, moves)
+    match_file = match.group(4).strip() if match.group(4) else ""
 
     first_non_space = pgn[match.end():].strip()[0]
-    if first_non_space not in [")", "(", "*"]:
+
+    replacement = ""
+
+    log_info(f"  Transposition:  [ {info} ]\n   Target moves:      {moves}     File: {format_path(match_file)}")
+
+    # If a specific transposition file in the match is given, look for it in all transposition directories
+    if match_file:
+        for dir in transposition_dirs:
+            path = dir + match_file
+            if os.path.isfile(path):
+                replacement = pgn_subtree(path, moves)
+                if replacement:
+                    break
+                else:
+                    log_info(f"      Not found in {path}")
+    
+    # Now look in the current file and transposition files provided by the caller of this script
+    if not replacement:
+        for file in transposition_files:
+            replacement = pgn_subtree(file, moves)
+            if replacement:
+                break
+            else:
+                log_info(f"      Not found in {file}")
+
+    # If a transposition file has not been found by now, give an error
+    if not replacement:
+        error_msg = f"  ERROR {num_errors + 1}: Unable to find a move [{info}] with moves [{moves}] in any transposition file."
+        log_info(error_msg)
+        replacement = "{ " + error_msg + " }"
+        num_errors += 1
+
+    elif first_non_space not in [")", "(", "*"]:
         error_msg = f"  ERROR {num_errors + 1}: The move at transposition [{info}] with moves [{moves}] in {input_file} is not empty. \"{first_non_space}\""
-        print(error_msg)
+        log_info(error_msg)
         replacement = "{ " + error_msg + " }"
         num_errors += 1
-        #exit()
-
-    elif not replacement:
-        error_msg = f"  ERROR {num_errors + 1}: Unable to find a move [{info}] with moves [{moves}] anywhere in transposition file {transposition_file}."
-        print(error_msg)
-        replacement = "{ " + error_msg + " }"
-        num_errors += 1
-        #exit()
-
-    else:
-        log_info(f"  Transposition:  [{info}]\n    Target moves: [{moves}]\n    Target file:  {format_path(transposition_file)}")
 
     pgn = pgn[:match.start()] + replacement + pgn[match.end():]
 
@@ -114,14 +149,11 @@ while (match):
 
 
 look_for = "Transposition:"
-
-log_info(f"  ----------------------------------")
-log_info(f"  Number of transpositions: {num_matches}")
-log_info(f"  ----------------------------------")
-log_info(f"  Number of errors: {num_errors}")
-log_info(f"  ----------------------------------")
-log_info(f"  Number of remaining \"{look_for}\" occcurrancies: {pgn.count(look_for)}")
-log_info(f"  ----------------------------------")
+remaining = pgn.count(look_for)
+log_info(f"  ----------------------------------------------")
+log_info(f"  Number of transpositions resolved: {num_matches - num_errors} / {num_matches}")
+log_info(f"  *** WARNING! Number of remaining \"{look_for}\" occcurrancies: {remaining}") if remaining > 0 else ""
+log_info(f"  ----------------------------------------------")
 
 if output_file == "-" and num_errors == 0:
     print(pgn)

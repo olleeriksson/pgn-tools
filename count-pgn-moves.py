@@ -43,5 +43,5 @@ for game in games:
     if (len(games) > 1):
         event_str = "    Event: " + event
 
-    print(f'Number of moves: {len(moves):>4}   File: {file} {event_str}')
+    print(f'Number of moves: {len(moves):>5}   File: {file} {event_str}')
 
