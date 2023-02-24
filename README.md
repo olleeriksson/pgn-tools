@@ -99,7 +99,7 @@ Transposition: "Tennison Gambit", 1.e4 d5 2.Nf3
 
 The description is any number of words to describe the transposition. It helps to give them individual descriptions when some little detail is off and you're trying to find the problem. Also, the moves can be written with or without the move numbers, so just "e4 e5 Nf3" would work as well.
 
-It's very important that you only add this comment in a location of the PGN file that represents the exact same position as the transposition you're describing. The move order can be different (obviously or it wouldn't be a transposition), but the position reached as to be identical to the position you're referring to in the transposition comment. It's very possible to create invalid PGN files if it's not.
+It's very important that you only add this comment in a location of the PGN file that represents the exact same position as the transposition you're describing. The move order can be different (obviously or it wouldn't be a transposition), but the position reached must be identical to the position you're referring to in the transposition comment. A check on the validity of the PGN tree is run so you will be informed if it's invalid, although this check does take some extra time.
 
 ## Basic example
 

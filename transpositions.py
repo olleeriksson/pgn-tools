@@ -1,7 +1,7 @@
 import sys
 import os
 import re
-from mod_pgn_subtree import pgn_subtree
+from mod_pgn_subtree import *
 
 def insert_braces(text):
     # Find all the occurrances of the braced string using re.finditer
@@ -39,9 +39,9 @@ def format_path(path):
     else:
         return path
 
-def log_info(text):
+def log_info(text, end="\n"):
     if output_file != "-":
-        print(text)
+        print(text, end=end)
 
 #----------------------------------------------
 
@@ -107,7 +107,7 @@ while (match):
 
     replacement = ""
 
-    log_info(f"  Transposition:  [ {info} ]\n   Target moves:      {moves}     File: {format_path(match_file)}")
+    log_info(f"  Transposition {num_matches + 1}:  [ {info} ]\n   Target moves:      {moves}     File: {format_path(match_file)}")
 
     # If a specific transposition file in the match is given, look for it in all transposition directories
     if match_file:
@@ -141,6 +141,20 @@ while (match):
         log_info(error_msg)
         replacement = "{ " + error_msg + " }"
         num_errors += 1
+
+    # Double check to make sure the PGN is valid
+    try:
+        test = pgn[:match.start()] + replacement + pgn[match.end():]
+        pgn_subtree_from_string(test, moves)
+    except AssertionError:
+        print(f"  **********************************************************")
+        print(f"  * INVALID PGN")
+        print(f"  * ERROR {num_errors + 1}: Applying move at transposition [{info}] with moves [{moves}] in {input_file} results in invalid PGN format.")
+        print(f"  *    Make sure the move containing the transposition is not the first (main line) of several moves. Either make it the only move, or make sure it's not the first one (even if it happens to be the theoretical main line). This is a limitation of this program unfortunately.")
+        print(f"  **********************************************************")
+        print(f"")
+        replacement = ""
+        #exit()
 
     pgn = pgn[:match.start()] + replacement + pgn[match.end():]
 

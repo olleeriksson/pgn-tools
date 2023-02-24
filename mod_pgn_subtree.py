@@ -1,6 +1,7 @@
 import chess.pgn
 import sys
 import re
+from io import StringIO
 from collections import OrderedDict
 
 def insert_braces(text):
@@ -52,7 +53,15 @@ def strip_leading_move(text):
         return text[match.end():]
 
 def pgn_subtree(filename, moves_str):
+    pgn_stream = open(filename, encoding="utf-8")
+    return get_pgn_subtree(pgn_stream, moves_str)
 
+def pgn_subtree_from_string(pgn_str, moves_str):
+    pgn_stream = StringIO(pgn_str)
+    sys.tracebacklimit = -1
+    return get_pgn_subtree(pgn_stream, moves_str)
+
+def get_pgn_subtree(pgn, moves_str):
     moves = list(filter(None, moves_str.split(' ')))
     #print(f"Filename: {filename}  moves: {moves}")
 
@@ -62,7 +71,6 @@ def pgn_subtree(filename, moves_str):
 
     master_node = chess.pgn.Game()
 
-    pgn = open(filename, encoding="utf-8")
     game = chess.pgn.read_game(pgn)
 
     mlist = []
