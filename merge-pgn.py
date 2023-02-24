@@ -5,6 +5,7 @@ import chess.pgn
 import sys
 import re
 from collections import OrderedDict
+from itertools import filterfalse
 
 
 # Extracts annotations from the comment
@@ -132,11 +133,15 @@ def insert_braces(text):
     return text
 
 def main():
-    usage = f"Usage: {sys.argv[0]} <PGN FILES>... <OUTPUT FILE>\nWhere OUTPUT_FILE can be - to indicate STDOUT."
+    usage = f"Usage: {sys.argv[0]} <PGN FILES>... <OUTPUT FILE> [--no-comments]\nWhere OUTPUT_FILE can be - to indicate STDOUT."
 
     if len(sys.argv) <= 2:
         raise SystemExit(usage)
     try:
+        filter_options = lambda x: re.match("^--[a-zA-Z-]*", x)
+        options = list(filter(filter_options, sys.argv))
+        sys.argv = list(filterfalse(filter_options, sys.argv))
+
         infiles = sys.argv[1:-1]
         outfile = sys.argv[-1]
     except IndexError:
@@ -150,6 +155,10 @@ def main():
         game = chess.pgn.read_game(pgn)
         while game is not None:
             text, annotations = merge_comments(master_node.comment, game.comment)
+
+            if "--no-comments" in options and not "Transposition:" in text:
+                text = ""
+
             master_node.comment = f"{text}{annotations}"
 
             games.append(game)
@@ -187,6 +196,10 @@ def main():
                 elif node.move not in list(newmoves):
                     nvnode = vnode.add_variation(node.move, nags = node.nags)
                     text, annotations = merge_comments(node.comment, "")
+
+                    if "--no-comments" in options and not "Transposition:" in text:
+                        text = ""
+
                     nvnode.comment = f"{text}{annotations}"
 
                     if len(node.variations) > 0:
