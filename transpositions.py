@@ -2,6 +2,7 @@ import sys
 import os
 import re
 from mod_pgn_subtree import *
+import argparse
 
 def insert_braces(text):
     # Find all the occurrances of the braced string using re.finditer
@@ -40,53 +41,61 @@ def format_path(path):
         return path
 
 def log_info(text, end="\n"):
-    if output_file != "-":
+    if args.output_file != "-":
         print(text, end=end)
 
 #----------------------------------------------
 
-try:
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-    if len(sys.argv) >= 4:
-        locations = sys.argv[3:]
-    else:
-        locations = ""
-except IndexError:
-    raise SystemExit(f"Usage: {sys.argv[0]} <INPUT_FILE> <OUTPUT_FILE> [<TRANSPOSITION_DIRECTORY_OR_FILE>...]")
+class DefaultHelpParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        self.print_help()
+        sys.exit(2)
 
-if input_file == "-":
+parser = DefaultHelpParser()
+parser.add_argument('input_file', type=str, help="The input PGN file.")
+parser.add_argument('output_file', type=str, help="The output PGN file.")
+parser.add_argument('locations', type=str, nargs='*', help="One or more (space separated) PGN files or directories where transpositsions are searched in.")
+parser.add_argument('--check', default=True, action=argparse.BooleanOptionalAction, help="Disables the verification of the validity of the PGN tree after applying the transpositions.")
+args = parser.parse_args()
+
+
+if args.input_file == "-":
     pgn = "".join(sys.stdin.read())
 else:
-    f = open(input_file, encoding="utf-8")
+    f = open(args.input_file, encoding="utf-8")
     pgn = f.read()
 
 
 transposition_files = []
 transposition_dirs = []
-for location in locations:
+for location in args.locations:
     if os.path.isfile(location):
         transposition_files.append(location)
     elif os.path.isdir(location):
+        if not location.endswith(os.path.sep):   # Add / or \ if it's not included
+            location += os.path.sep
         transposition_dirs.append(location)
     else:
         log_info(f"Error. \"{location}\" doesn't exist.")
         exit()
 
-# Add the input file as a transposition file and the directory of the input file as a transposition directory
-input_file_dir = os.path.dirname(os.path.realpath(input_file)) + os.path.sep
-transposition_dirs.append(input_file_dir)
-transposition_files.append(input_file)
+# Add the input file as a transposition file
+transposition_files.append(args.input_file)
 
+# Add the directory of the input file as a transposition directory
+input_file_dir = os.path.dirname(os.path.realpath(args.input_file)) + os.path.sep
+if not input_file_dir in transposition_dirs:
+    transposition_dirs.append(input_file_dir)
 
 # Print all transposition files and dirs
-log_info(f"  Input file: \"{format_path(input_file)}\"")
-log_info(f"  Output file: \"{format_path(output_file)}\"")
+log_info(f"  Input file: \"{format_path(args.input_file)}\"")
+log_info(f"  Output file: \"{format_path(args.output_file)}\"")
 log_info(f"  Global transposition files and dirs:")
 for file in transposition_files:
-    log_info(f"    \"{format_path(file)}\"")
+    log_info(f"    File: \"{file}\"")
 for dir in transposition_dirs:
-    log_info(f"    \"{format_path(dir)}\"")
+    log_info(f"    Dir:  \"{dir}\"")
 
 
 # Looking for a comment like so:
@@ -137,24 +146,24 @@ while (match):
         num_errors += 1
 
     elif first_non_space not in [")", "(", "*"]:
-        error_msg = f"  ERROR {num_errors + 1}: The move at transposition [{info}] with moves [{moves}] in {input_file} is not empty. \"{first_non_space}\""
+        error_msg = f"  ERROR {num_errors + 1}: The move at transposition [{info}] with moves [{moves}] in {args.input_file} is not empty. \"{first_non_space}\""
         log_info(error_msg)
         replacement = "{ " + error_msg + " }"
         num_errors += 1
 
     # Double check to make sure the PGN is valid
-    try:
-        test = pgn[:match.start()] + replacement + pgn[match.end():]
-        pgn_subtree_from_string(test, moves)
-    except AssertionError:
-        print(f"  **********************************************************")
-        print(f"  * INVALID PGN")
-        print(f"  * ERROR {num_errors + 1}: Applying move at transposition [{info}] with moves [{moves}] in {input_file} results in invalid PGN format.")
-        print(f"  *    Make sure the move containing the transposition is not the first (main line) of several moves. Either make it the only move, or make sure it's not the first one (even if it happens to be the theoretical main line). This is a limitation of this program unfortunately.")
-        print(f"  **********************************************************")
-        print(f"")
-        replacement = ""
-        #exit()
+    if args.check:
+        try:
+            test = pgn[:match.start()] + replacement + pgn[match.end():]
+            pgn_subtree_from_string(test, moves)
+        except AssertionError:
+            print(f"  **********************************************************")
+            print(f"  * INVALID PGN")
+            print(f"  * ERROR {num_errors + 1}: Applying move at transposition [{info}] with moves [{moves}] in {args.input_file} results in invalid PGN format.")
+            print(f"  *    Make sure the move containing the transposition is not the first (main line) of several moves. Either make it the only move, or make sure it's not the first one (even if it happens to be the theoretical main line). This is a limitation of this program unfortunately.")
+            print(f"  **********************************************************")
+            print(f"")
+            replacement = ""
 
     pgn = pgn[:match.start()] + replacement + pgn[match.end():]
 
@@ -169,10 +178,10 @@ log_info(f"  Number of transpositions resolved: {num_matches - num_errors} / {nu
 log_info(f"  *** WARNING! Number of remaining \"{look_for}\" occcurrancies: {remaining}") if remaining > 0 else ""
 log_info(f"  ----------------------------------------------")
 
-if output_file == "-" and num_errors == 0:
+if args.output_file == "-" and num_errors == 0:
     print(pgn)
 else:
-    f = open(output_file, "w", encoding="utf-8")
+    f = open(args.output_file, "w", encoding="utf-8")
     f.write(pgn)
     f.close()    
 
