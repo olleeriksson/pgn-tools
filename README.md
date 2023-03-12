@@ -115,6 +115,8 @@ The script is then called using these parameters:
 python transpositions.py <input file> <output file> <transposition directory>
 ```
 
+
+
 The transposition directory is the directory where the transposition files can be found. Since we are not pointing our transposition comments to a different file, we can leave this out. This can also be left out if the transposition files are in the same directory as the input file.
 
 Last thing, instead of a filename you can write - (dash) to read from STDIN or write to STDOUT.
@@ -186,7 +188,27 @@ python pgn-subtree.py game.pgn 1.e4 e5 2.Nc3
 Ie, the whole subtree starting at 1.e4 e5 2.Nc3 will be returned including all comments from and including that move, excluding the move itself.
 
 
+
 # Changelog
+
+### 2023-03-12
+
+- New flag to enable/disable following of transposition into other files.
+- New flag to enable only printing a warning.
+
+### 2023-02-27
+
+- Using argparse for argument parsing.
+
+### 2023-02-24
+
+- New flag for transpositions.py to include a PGN validity check after transpositions are applied.
+- New flag for merge-pgn.py to remove all comments.
+
+### 2023-02-15
+
+- transpositions.py can now run through the whole file and report all error afterwards instead of stopping at the first error.
+- transpositions.py can now take global transposition files.
 
 ### 2023-02-12
 
