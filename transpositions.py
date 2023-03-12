@@ -44,6 +44,13 @@ def log_info(text, end="\n"):
     if args.output_file != "-":
         print(text, end=end)
 
+def remove_lines_starting_with(str, skip_headers):
+    skip_headers = ['[Event', '[Site', '[UTCDate', '[UTCTime', '[Variant', '[ECO', '[Opening', '[Result']
+    lines = str.splitlines(keepends=True)
+    new_lines = [n for n in lines if not n.startswith(tuple(skip_headers))]
+    return "".join(new_lines)
+
+
 #----------------------------------------------
 
 class DefaultHelpParser(argparse.ArgumentParser):
@@ -57,6 +64,8 @@ parser.add_argument('input_file', type=str, help="The input PGN file.")
 parser.add_argument('output_file', type=str, help="The output PGN file.")
 parser.add_argument('locations', type=str, nargs='*', help="One or more (space separated) PGN files or directories where transpositsions are searched in.")
 parser.add_argument('--check', default=True, action=argparse.BooleanOptionalAction, help="Disables the verification of the validity of the PGN tree after applying the transpositions.")
+parser.add_argument('--only-warn', default=False, action=argparse.BooleanOptionalAction, help="Print warnings instead of errors when unable to find a transposition.")
+parser.add_argument('--follow-file', default=True, action=argparse.BooleanOptionalAction, help="Follows or doesn't follow the transposition file when looking for transpositions. Default is to follow the file.")
 args = parser.parse_args()
 
 
@@ -66,6 +75,14 @@ else:
     f = open(args.input_file, encoding="utf-8")
     pgn = f.read()
 
+# Remove certain headers
+skip_headers = ['[Event', '[Site', '[UTCDate', '[UTCTime', '[Variant', '[ECO', '[Opening', '[Result']
+pgn = remove_lines_starting_with(pgn, skip_headers)
+
+
+error_label1 = "\n"               if not args.only_warn else ""
+error_label2 = "**** ERROR **** " if not args.only_warn else "Warning"
+error_label3 = "\n"               if not args.only_warn else ""
 
 transposition_files = []
 transposition_dirs = []
@@ -116,10 +133,10 @@ while (match):
 
     replacement = ""
 
-    log_info(f"  Transposition {num_matches + 1}:  [ {info} ]\n   Target moves:      {moves}     File: {format_path(match_file)}")
+    log_info(f"  Transposition {num_matches + 1}:  [ {info} ]\n    Target moves:      {moves}     File: {format_path(match_file)}")
 
     # If a specific transposition file in the match is given, look for it in all transposition directories
-    if match_file:
+    if match_file and args.follow_file:
         for dir in transposition_dirs:
             path = dir + match_file
             if os.path.isfile(path):
@@ -140,13 +157,17 @@ while (match):
 
     # If a transposition file has not been found by now, give an error
     if not replacement:
-        error_msg = f"  ERROR {num_errors + 1}: Unable to find a move [{info}] with moves [{moves}] in any transposition file."
+        error_msg =  f"{error_label1}"
+        error_msg += f"    {error_label2} {num_errors + 1}: Unable to find a move [{info}] with moves [{moves}] in any transposition file."
+        error_msg += f"{error_label3}"
         log_info(error_msg)
-        replacement = "{ " + error_msg + " }"
+        replacement = "{ Transposition \"" + info + "\" to " + moves + " }"
         num_errors += 1
 
     elif first_non_space not in [")", "(", "*"]:
-        error_msg = f"  ERROR {num_errors + 1}: The move at transposition [{info}] with moves [{moves}] in {args.input_file} is not empty. \"{first_non_space}\""
+        error_msg =  f"{error_label1}"
+        error_msg += f"    {error_label2} {num_errors + 1}: The move at transposition [{info}] with moves [{moves}] in {args.input_file} is not empty. \"{first_non_space}\""
+        error_msg += f"{error_label3}"
         log_info(error_msg)
         replacement = "{ " + error_msg + " }"
         num_errors += 1
