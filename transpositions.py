@@ -42,7 +42,11 @@ def format_path(path):
 
 def log_info(text, end="\n"):
     if args.output_file != "-":
-        print(text, end=end)
+        print(text, end=end, flush=True)
+
+def log_debug(text, end="\n"):
+    if args.output_file != "-" and args.verbose:
+        print(text, end=end, flush=True)
 
 def remove_lines_starting_with(str, skip_headers):
     skip_headers = ['[Event', '[Site', '[UTCDate', '[UTCTime', '[Variant', '[ECO', '[Opening', '[Result']
@@ -63,11 +67,11 @@ parser = DefaultHelpParser()
 parser.add_argument('input_file', type=str, help="The input PGN file.")
 parser.add_argument('output_file', type=str, help="The output PGN file.")
 parser.add_argument('locations', type=str, nargs='*', help="One or more (space separated) PGN files or directories where transpositsions are searched in.")
-parser.add_argument('--check', default=True, action=argparse.BooleanOptionalAction, help="Disables the verification of the validity of the PGN tree after applying the transpositions.")
+parser.add_argument('--verbose', default=True, action=argparse.BooleanOptionalAction, help="Verbose output.")
+parser.add_argument('--check', default=True, action=argparse.BooleanOptionalAction, help="Enables the verification of the validity of the PGN tree after applying the transpositions.")
 parser.add_argument('--only-warn', default=False, action=argparse.BooleanOptionalAction, help="Print warnings instead of errors when unable to find a transposition.")
 parser.add_argument('--follow-file', default=True, action=argparse.BooleanOptionalAction, help="Follows or doesn't follow the transposition file when looking for transpositions. Default is to follow the file.")
 args = parser.parse_args()
-
 
 if args.input_file == "-":
     pgn = "".join(sys.stdin.read())
@@ -80,9 +84,9 @@ skip_headers = ['[Event', '[Site', '[UTCDate', '[UTCTime', '[Variant', '[ECO', '
 pgn = remove_lines_starting_with(pgn, skip_headers)
 
 
-error_label1 = "\n"               if not args.only_warn else ""
-error_label2 = "**** ERROR **** " if not args.only_warn else "Warning"
-error_label3 = "\n"               if not args.only_warn else ""
+error_label1 = ""             if args.only_warn else "\n"
+error_label2 = "Warning"        if args.only_warn else "**** ERROR **** "
+error_label3 = ""               if args.only_warn else "\n"
 
 transposition_files = []
 transposition_dirs = []
@@ -106,13 +110,13 @@ if not input_file_dir in transposition_dirs:
     transposition_dirs.append(input_file_dir)
 
 # Print all transposition files and dirs
-log_info(f"  Input file: \"{format_path(args.input_file)}\"")
-log_info(f"  Output file: \"{format_path(args.output_file)}\"")
-log_info(f"  Global transposition files and dirs:")
+log_debug(f"  Input file: \"{format_path(args.input_file)}\"")
+log_debug(f"  Output file: \"{format_path(args.output_file)}\"")
+log_debug(f"  Global transposition files and dirs:")
 for file in transposition_files:
-    log_info(f"    File: \"{file}\"")
+    log_debug(f"    File: \"{file}\"")
 for dir in transposition_dirs:
-    log_info(f"    Dir:  \"{dir}\"")
+    log_debug(f"    Dir:  \"{dir}\"")
 
 
 # Looking for a comment like so:
@@ -133,7 +137,10 @@ while (match):
 
     replacement = ""
 
-    log_info(f"  Transposition {num_matches + 1}:  [ {info} ]\n    Target moves:      {moves}     File: {format_path(match_file)}")
+    if args.verbose:
+        log_debug(f"\n  Transposition {num_matches + 1}:  [ {info} ]\n    Target moves:      {moves}     File: {format_path(match_file)}", "")
+    else:
+        log_info(".", "")
 
     # If a specific transposition file in the match is given, look for it in all transposition directories
     if match_file and args.follow_file:
@@ -144,7 +151,7 @@ while (match):
                 if replacement:
                     break
                 else:
-                    log_info(f"      Not found in {path}")
+                    log_debug(f"\n      Not found in {path}")
     
     # Now look in the current file and transposition files provided by the caller of this script
     if not replacement:
@@ -153,14 +160,15 @@ while (match):
             if replacement:
                 break
             else:
-                log_info(f"      Not found in {file}")
+                log_debug(f"\n      Not found in {file}")
 
     # If a transposition file has not been found by now, give an error
     if not replacement:
         error_msg =  f"{error_label1}"
         error_msg += f"    {error_label2} {num_errors + 1}: Unable to find a move [{info}] with moves [{moves}] in any transposition file."
         error_msg += f"{error_label3}"
-        log_info(error_msg)
+        if not args.only_warn or args.verbose:
+            log_info(error_msg, "")
         replacement = "{ Transposition \"" + info + "\" to " + moves + " }"
         num_errors += 1
 
@@ -178,6 +186,7 @@ while (match):
             test = pgn[:match.start()] + replacement + pgn[match.end():]
             pgn_subtree_from_string(test, moves)
         except AssertionError:
+            print(f"")
             print(f"  **********************************************************")
             print(f"  * INVALID PGN")
             print(f"  * ERROR {num_errors + 1}: Applying move at transposition [{info}] with moves [{moves}] in {args.input_file} results in invalid PGN format.")
@@ -194,6 +203,7 @@ while (match):
 
 look_for = "Transposition:"
 remaining = pgn.count(look_for)
+log_info(f"")
 log_info(f"  ----------------------------------------------")
 log_info(f"  Number of transpositions resolved: {num_matches - num_errors} / {num_matches}")
 log_info(f"  *** WARNING! Number of remaining \"{look_for}\" occcurrancies: {remaining}") if remaining > 0 else ""
