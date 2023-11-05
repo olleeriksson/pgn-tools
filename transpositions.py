@@ -165,8 +165,9 @@ while (match):
 
     # If a transposition file has not been found by now, give an error
     if not replacement:
+        source = "any transposition file" if args.follow_file else "the current file"
         error_msg =  f"{error_label1}"
-        error_msg += f"    {error_label2} {num_errors + 1}: Unable to find a move [{info}] with moves [{moves}] in any transposition file."
+        error_msg += f"    {error_label2} {num_errors + 1}: Unable to find a move [{info}] with moves [{moves}] in {source}."
         error_msg += f"{error_label3}"
         if not args.only_warn or args.verbose:
             log_info(error_msg, "")
