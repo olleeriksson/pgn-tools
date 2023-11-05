@@ -134,6 +134,7 @@ while (match):
     match_file = match.group(4).strip() if match.group(4) else ""
 
     first_non_space = pgn[match.end():].strip()[0]
+    first_non_space_full = pgn[match.end():].strip()[0:40]
 
     replacement = ""
 
@@ -150,8 +151,8 @@ while (match):
                 replacement = pgn_subtree(path, moves)
                 if replacement:
                     break
-                else:
-                    log_debug(f"\n      Not found in {path}")
+                #else:
+                #    log_debug(f"\n      Not found in {format_path(path)} ... continuing", "")
     
     # Now look in the current file and transposition files provided by the caller of this script
     if not replacement:
@@ -159,8 +160,8 @@ while (match):
             replacement = pgn_subtree(file, moves)
             if replacement:
                 break
-            else:
-                log_debug(f"\n      Not found in {file}")
+            #else:
+            #    log_debug(f"\n      Not found in {format_path(file)} ... continuing", "")
 
     # If a transposition file has not been found by now, give an error
     if not replacement:
@@ -174,7 +175,7 @@ while (match):
 
     elif first_non_space not in [")", "(", "*"]:
         error_msg =  f"{error_label1}"
-        error_msg += f"    {error_label2} {num_errors + 1}: The move at transposition [{info}] with moves [{moves}] in {args.input_file} is not empty. \"{first_non_space}\""
+        error_msg += f"    {error_label2} {num_errors + 1}: The move at transposition [{info}] with moves [{moves}] in {args.input_file} is not empty. \"{first_non_space_full}\""
         error_msg += f"{error_label3}"
         log_info(error_msg)
         replacement = "{ " + error_msg + " }"
