@@ -8,7 +8,7 @@ sys.path.append(parent)
 from mod_pgn_subtree import *
 
 def print_before_and_after(move):
-    print(f"\"{move.ljust(18)}\" -> \"{strip_leading_move_number(move)}\"")
+    print(f"\"{move.ljust(18)}\" -> \"{normalize_and_strip_move_numbers(move)}\"")
 
 print_before_and_after("3.d4")
 print_before_and_after("10. d4")

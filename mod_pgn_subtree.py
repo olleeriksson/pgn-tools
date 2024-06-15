@@ -39,12 +39,19 @@ def get_path(node):
     return " ".join(nodes_ordered)
 
 # Convert  "1.d4 Nf6 2.c4 e6"  to  "d4 Nf6 c4 e6"
-def strip_leading_move_number(move):
-    res = re.findall('^\s*\d*\.{0,3}\s*(\S*)\s*', move)
-    if res and res[0]:
-        return res[0]
-    else:
-        return move
+# def strip_leading_move_number(move):
+#     res = re.findall('^\s*\d*\.{0,3}\s*(\S*)\s*', move)
+#     if res and res[0]:
+#         return res[0]
+#     else:
+#         return move
+
+# Convert  "1.d4 Nf6 2.c4 e6"  to  "d4 Nf6 c4 e6"
+def normalize_and_strip_move_numbers(moves_str):
+    res = re.sub('\d+\.{1,3}', '', moves_str)  # remove move numbers
+    res = re.sub('\s{2,}', ' ', res)           # replace multiple whitespaces with one
+    res = res.strip()
+    return res
 
 def strip_leading_move(text):
     regex = re.compile(r'\d+\.+\s*\S+\s*')
@@ -62,12 +69,15 @@ def pgn_subtree_from_string(pgn_str, moves_str):
     return get_pgn_subtree(pgn_stream, moves_str)
 
 def get_pgn_subtree(pgn, moves_str):
-    moves = list(filter(None, moves_str.split(' ')))
-    #print(f"Filename: {filename}  moves: {moves}")
+    #moves = list(filter(None, moves_str.split(' ')))
+    #print(f"Looking for moves: {moves}")
 
-    moves = map(lambda move: strip_leading_move_number(move), moves)
+    #moves = map(lambda move: strip_leading_move_number(move), moves)
+    #path = " ".join(moves)
+    #print(f"  Without move numbers: {path}")
 
-    path = " ".join(moves)
+    path = normalize_and_strip_move_numbers(moves_str)
+    #print(f"  Without move numbers: {path}")
 
     master_node = chess.pgn.Game()
 

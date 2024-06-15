@@ -1,6 +1,8 @@
 import sys
 import os
 import re
+import time
+import datetime
 from mod_pgn_subtree import *
 import argparse
 
@@ -57,6 +59,8 @@ def remove_lines_starting_with(str, skip_headers):
 
 #----------------------------------------------
 
+start_time = time.time()
+
 class DefaultHelpParser(argparse.ArgumentParser):
     def error(self, message):
         sys.stderr.write('error: %s\n' % message)
@@ -104,6 +108,15 @@ for location in args.locations:
 # Add the input file as a transposition file
 transposition_files.append(args.input_file)
 
+# Remove duplicates in the list of transposition files
+transposition_files = list(set(transposition_files))
+
+# Move the input file the number 1 transposition file
+for i, item in enumerate(transposition_files):
+    if item == args.input_file:
+        transposition_files.insert(0, transposition_files.pop(i))
+        break
+
 # Add the directory of the input file as a transposition directory
 input_file_dir = os.path.dirname(os.path.realpath(args.input_file)) + os.path.sep
 if not input_file_dir in transposition_dirs:
@@ -129,9 +142,13 @@ match = regex.search(pgn)
 num_matches = 0
 num_errors = 0
 while (match):
-    info = match.group(1).strip()
-    moves = match.group(2).strip()
-    match_file = match.group(4).strip() if match.group(4) else ""
+    GROUP_WHOLE_MATCH = 0
+    GROUP_INFO = 1
+    GROUP_TARGET_MOVES = 2
+    GROUP_FILE = 4
+    info = match.group(GROUP_INFO).strip()
+    target_moves = match.group(GROUP_TARGET_MOVES).strip()
+    match_file = match.group(GROUP_FILE).strip() if match.group(GROUP_FILE) else ""
 
     first_non_space = pgn[match.end():].strip()[0]
     first_non_space_full = pgn[match.end():].strip()[0:40]
@@ -139,25 +156,35 @@ while (match):
     replacement = ""
 
     if args.verbose:
-        log_debug(f"\n  Transposition {num_matches + 1}:  [ {info} ]\n    Target moves:      {moves}     File: {format_path(match_file)}", "")
+        log_debug(f"\n  Transposition {num_matches + 1}:  [ {info} ]\n    Target moves:      {target_moves}     File: {format_path(match_file)}", "")
     else:
         log_info(".", "")
+
+    # If the first thing after the match is not a ) ( or * then there is an annotation, which we can't have. Abort.
+    if first_non_space not in [")", "(", "*"]:   # TODO: could use the variable remains above
+        error_msg =  f"{error_label1}"
+        error_msg += f"    {error_label2} {num_errors + 1}: The move at transposition [{info}] with moves [{target_moves}] in {args.input_file} is not empty. \"{first_non_space_full}\""
+        error_msg += f"{error_label3}"
+        log_info(error_msg)
+        replacement = "{ " + error_msg + " }"
+        num_errors += 1
+        break
 
     # If a specific transposition file in the match is given, look for it in all transposition directories
     if match_file and args.follow_file:
         for dir in transposition_dirs:
             path = dir + match_file
             if os.path.isfile(path):
-                replacement = pgn_subtree(path, moves)
+                replacement = pgn_subtree(path, target_moves)
                 if replacement:
                     break
                 #else:
                 #    log_debug(f"\n      Not found in {format_path(path)} ... continuing", "")
-    
+
     # Now look in the current file and transposition files provided by the caller of this script
     if not replacement:
         for file in transposition_files:
-            replacement = pgn_subtree(file, moves)
+            replacement = pgn_subtree(file, target_moves)
             if replacement:
                 break
             #else:
@@ -165,39 +192,30 @@ while (match):
 
     # If a transposition file has not been found by now, give an error
     if not replacement:
-        source = "any transposition file" if args.follow_file else "the current file"
         error_msg =  f"{error_label1}"
-        error_msg += f"    {error_label2} {num_errors + 1}: Unable to find a move [{info}] with moves [{moves}] in {source}."
+        error_msg += f"    {error_label2} {num_errors + 1}: Unable to find a move [{info}] with moves [{target_moves}] in any transposition file."
         error_msg += f"{error_label3}"
         if not args.only_warn or args.verbose:
             log_info(error_msg, "")
-        replacement = "{ Transposition \"" + info + "\" to " + moves + " }"
-        num_errors += 1
-
-    elif first_non_space not in [")", "(", "*"]:
-        error_msg =  f"{error_label1}"
-        error_msg += f"    {error_label2} {num_errors + 1}: The move at transposition [{info}] with moves [{moves}] in {args.input_file} is not empty. \"{first_non_space_full}\""
-        error_msg += f"{error_label3}"
-        log_info(error_msg)
-        replacement = "{ " + error_msg + " }"
+        replacement = "{ Transposition \"" + info + "\" to " + target_moves + " }"
         num_errors += 1
 
     # Double check to make sure the PGN is valid
     if args.check:
         try:
-            test = pgn[:match.start()] + replacement + pgn[match.end():]
-            pgn_subtree_from_string(test, moves)
+            test = pgn[:match.start(GROUP_WHOLE_MATCH)] + replacement + pgn[match.end(GROUP_WHOLE_MATCH):]
+            pgn_subtree_from_string(test, target_moves)
         except AssertionError:
             print(f"")
             print(f"  **********************************************************")
             print(f"  * INVALID PGN")
-            print(f"  * ERROR {num_errors + 1}: Applying move at transposition [{info}] with moves [{moves}] in {args.input_file} results in invalid PGN format.")
+            print(f"  * ERROR {num_errors + 1}: Applying move at transposition [{info}] with moves [{target_moves}] in {args.input_file} results in invalid PGN format.")
             print(f"  *    Make sure the move containing the transposition is not the first (main line) of several moves. Either make it the only move, or make sure it's not the first one (even if it happens to be the theoretical main line). This is a limitation of this program unfortunately.")
             print(f"  **********************************************************")
             print(f"")
             replacement = ""
 
-    pgn = pgn[:match.start()] + replacement + pgn[match.end():]
+    pgn = pgn[:match.start(GROUP_WHOLE_MATCH)] + replacement + pgn[match.end(GROUP_WHOLE_MATCH):]
 
     match = regex.search(pgn)
     num_matches += 1
@@ -205,16 +223,22 @@ while (match):
 
 look_for = "Transposition:"
 remaining = pgn.count(look_for)
+
+# Calculate the duration
+end_time = time.time()
+duration = duration = round(end_time - start_time)
+duration_str = str(datetime.timedelta(seconds=duration))  # human-readable format
+
 log_info(f"")
-log_info(f"  ----------------------------------------------")
-log_info(f"  Number of transpositions resolved: {num_matches - num_errors} / {num_matches}")
+log_info(f"  ---------------------------------------------------------------------------------")
+log_info(f"  Number of transpositions resolved: {num_matches - num_errors} / {num_matches},   Duration: {duration_str}")
 log_info(f"  *** WARNING! Number of remaining \"{look_for}\" occcurrancies: {remaining}") if remaining > 0 else ""
-log_info(f"  ----------------------------------------------")
+log_info(f"  ---------------------------------------------------------------------------------")
 
 if args.output_file == "-" and num_errors == 0:
     print(pgn)
 else:
     f = open(args.output_file, "w", encoding="utf-8")
     f.write(pgn)
-    f.close()    
+    f.close()
 
