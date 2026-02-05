@@ -29,6 +29,8 @@ def extract_annotations(text):
             if cmd not in annotations:
                 annotations[cmd] = OrderedDict()
             for value in values:
+                if not value: # Skip annotations with no value like [%csl ]
+                    continue
                 uci = value[1:]
                 color = value[0]
                 annotations[cmd][uci] = color
@@ -115,7 +117,7 @@ def insert_braces(text):
     # Iterate through all the matches (in reversed order because inserting stuff messes up the matches completely)
     for brace_match in reversed(brace_matches):
         start_pos = brace_match.start()
-        end_pos = brace_match.end()
+        #end_pos = brace_match.end()    # Assigned but never used
 
         # Find the position of the first [% within the braces
         percent_match = re.search(r'\[%', brace_match.group(1), flags=re.DOTALL)
@@ -132,15 +134,17 @@ def insert_braces(text):
 
     return text
 
+def filterOptions(argument):
+    return (re.match("^--[a-zA-Z-]*", argument))
+
 def main():
     usage = f"Usage: {sys.argv[0]} <PGN FILES>... <OUTPUT FILE> [--no-comments]\nWhere OUTPUT_FILE can be - to indicate STDOUT."
 
     if len(sys.argv) <= 2:
         raise SystemExit(usage)
     try:
-        filter_options = lambda x: re.match("^--[a-zA-Z-]*", x)
-        options = list(filter(filter_options, sys.argv))
-        sys.argv = list(filterfalse(filter_options, sys.argv))
+        options = list(filter(filterOptions, sys.argv))
+        sys.argv = list(filterfalse(filterOptions, sys.argv))
 
         infiles = sys.argv[1:-1]
         outfile = sys.argv[-1]
@@ -156,7 +160,7 @@ def main():
         while game is not None:
             text, annotations = merge_comments(master_node.comment, game.comment)
 
-            if "--no-comments" in options and not "Transposition:" in text:
+            if "--no-comments" in options and "Transposition:" not in text:
                 text = ""
 
             master_node.comment = f"{text}{annotations}"
@@ -197,7 +201,7 @@ def main():
                     nvnode = vnode.add_variation(node.move, nags = node.nags)
                     text, annotations = merge_comments(node.comment, "")
 
-                    if "--no-comments" in options and not "Transposition:" in text:
+                    if "--no-comments" in options and "Transposition:" not in text:
                         text = ""
 
                     nvnode.comment = f"{text}{annotations}"
